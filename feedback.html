@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Feedback - Roastify</title>
+<style>
+    body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: url("coding.jpg") no-repeat center center/cover;
+    }
+
+    .container {
+        background: rgb(186, 117, 195);
+        padding: 40px;
+        border-radius: 20px;
+        max-width: 500px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+
+    h2 {
+        margin-bottom: 20px;
+        color: black;
+    }
+
+    /* Star rating */
+    .rating span {
+        display: inline-block;
+        width: 50px;
+        text-align: center;
+        font-size: 50px;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .rating span:hover {
+        color: gold;
+    }
+
+    textarea {
+        width: 100%;
+        padding: 15px;
+        margin-top: 20px;
+        border-radius: 15px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        resize: vertical;
+    }
+
+    button {
+        margin-top: 20px;
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 25px;
+        background: #ff4b5c;
+        color: white;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+
+    .back-btn {
+        margin-top: 15px;
+        padding: 10px 25px;
+        font-size: 14px;
+        border-radius: 20px;
+        background: #555;
+        color: white;
+        cursor: pointer;
+        border: none;
+        transition: 0.3s;
+    }
+
+    .back-btn:hover {
+        background: #333;
+        transform: translateY(-2px);
+    }
+
+    #ratingError, #commentError {
+        color: red;
+        margin-top: 10px;
+        display: none;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>⭐ We Value Your Feedback</h2>
+
+    <!-- Star Rating -->
+    <div class="rating" id="starRating">
+        <span data-value="1">☆</span>
+        <span data-value="2">☆</span>
+        <span data-value="3">☆</span>
+        <span data-value="4">☆</span>
+        <span data-value="5">☆</span>
+    </div>
+    <p id="ratingError">Please select a rating!</p>
+
+    <!-- Mandatory Comment Box -->
+    <textarea id="feedbackText" placeholder="Write your comments here..."></textarea>
+    <p id="commentError">Please enter your comments!</p>
+
+    <!-- Submit Button -->
+    <button onclick="submitFeedback()">Submit Feedback</button>
+
+    <!-- Back to Home -->
+    <button class="back-btn" onclick="window.location.href='front.html'">
+        ⬅ Back to Home
+    </button>
+</div>
+
+<script>
+    let selectedRating = 0;
+    const stars = document.querySelectorAll("#starRating span");
+
+    stars.forEach(star => {
+        const val = parseInt(star.getAttribute("data-value"));
+
+        // Highlight stars on hover
+        star.addEventListener("mouseover", () => {
+            stars.forEach((s, i) => {
+                s.textContent = i < val ? "⭐" : "☆";
+            });
+        });
+
+        // Reset stars to current selection on mouse out
+        star.addEventListener("mouseout", () => {
+            stars.forEach((s, i) => {
+                s.textContent = i < selectedRating ? "⭐" : "☆";
+            });
+        });
+
+        // Select star on click
+        star.addEventListener("click", () => {
+            selectedRating = val;
+            stars.forEach((s, i) => {
+                s.textContent = i < selectedRating ? "⭐" : "☆";
+            });
+            document.getElementById("ratingError").style.display = "none";
+        });
+    });
+
+    async function submitFeedback() {
+        const comment = document.getElementById("feedbackText").value.trim();
+        let valid = true;
+
+        if(selectedRating === 0){
+            document.getElementById("ratingError").style.display = "block";
+            valid = false;
+        }
+        if(comment === ""){
+            document.getElementById("commentError").style.display = "block";
+            valid = false;
+        } else {
+            document.getElementById("commentError").style.display = "none";
+        }
+
+        if(!valid) return;
+
+        try {
+            const response = await fetch("http://localhost:5000/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ rating: selectedRating, feedback: comment })
+            });
+
+            if(response.ok){
+                alert("Thank you for your feedback! ⭐");
+                // Reset
+                selectedRating = 0;
+                stars.forEach(s => s.textContent = "☆");
+                document.getElementById("feedbackText").value = "";
+            } else {
+                alert("Error submitting feedback.");
+            }
+        } catch(e){
+            console.error(e);
+            alert("Could not connect to backend.");
+        }
+    }
+</script>
+</body>
+</html>
